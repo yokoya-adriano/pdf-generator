@@ -4,6 +4,8 @@ from app.pdf_generator import generate_pdf
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import json
+from app.pdf_rebuilder import rebuild_pdf
 
 app = FastAPI()
 
@@ -58,4 +60,27 @@ def download_pdf(filename: str):
         )
     raise HTTPException(status_code=404, detail="Arquivo não encontrado")
 
+@app.post("/rebuild-pdf/{filename}")
+def rebuild_pdf_from_json(filename: str):
+    try:
+        json_path = os.path.join("generated_json", filename + ".json")
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail="JSON não encontrado")
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        title = data.get("title")
+        content = data.get("content")
+
+        if not title or not content:
+            raise HTTPException(status_code=400, detail="Dados incompletos no JSON")
+
+        pdf_filename = filename + ".pdf"
+        file_path = rebuild_pdf(title, content, pdf_filename)
+
+        return JSONResponse(content={"filename": pdf_filename})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
