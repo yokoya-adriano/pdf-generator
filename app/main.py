@@ -16,10 +16,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class PDFContent(BaseModel):
+    input_1: str
+    input_2: str
+    input_3: str
+
 # Modelo da requisição (JSON)
 class PDFRequest(BaseModel):
     title: str
-    content: str
+    content: PDFContent
 
 # Rota que gera e retorna o PDF
 from fastapi.responses import JSONResponse

@@ -3,6 +3,8 @@ import os
 import re
 from datetime import datetime
 import json
+from .pdf_layout import apply_default_layout
+from pydantic import BaseModel
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -10,21 +12,17 @@ def sanitize_filename(filename: str) -> str:
     """
     return re.sub(r'[^\w\-_.]', '_', filename)
 
-def generate_pdf(title: str, content: str) -> str:
+def generate_pdf(title: str, content: BaseModel) -> str:
     """
     Gera um arquivo PDF com título e conteúdo fornecidos.
     O arquivo é salvo em disco e o caminho é retornado.
     """
     # Cria o PDF
     pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    content_dict = content.dict()
 
-    # Título centralizado
-    pdf.cell(200, 10, txt=title, ln=True, align='C')
-
-    # Conteúdo
-    pdf.multi_cell(0, 10, txt=content)
+    # Aplica o layout
+    apply_default_layout(pdf, title, content_dict)
 
     #### PDF ####
     # Cria diretório "generated" se ainda não existir
@@ -53,7 +51,7 @@ def generate_pdf(title: str, content: str) -> str:
     # Dados da requisição a serem salvos
     data_dict = {
         "title": title,
-        "content": content
+        "content": content.dict()
     }
 
     # Salva o JSON
